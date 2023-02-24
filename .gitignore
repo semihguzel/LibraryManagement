@@ -1,0 +1,10 @@
+bin/
+obj/
+/packages/
+riderModule.iml
+/_ReSharper.Caches/
+*.suo
+/aws.xml
+*.idea
+*.user
+dataSources.xml
