@@ -1,5 +1,7 @@
 using System.Text.Json.Serialization;
 using LibraryManagement.API.Extensions;
+using LibraryManagement.Infrastructure;
+using Microsoft.EntityFrameworkCore;
 
 #region Builder&Services
 
@@ -14,7 +16,8 @@ builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen();
 
-//TODO:DbContext will be added here
+builder.Services.AddDbContext<LibraryContext>(o =>
+    o.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddJwtAuthentication(builder.Configuration.GetSection("AppSettings:JwtKey").Value);
 
