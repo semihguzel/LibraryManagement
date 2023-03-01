@@ -1,6 +1,6 @@
 using LibraryManagement.Core.Entities;
 
-namespace LibraryManagement.Core.Interfaces;
+namespace LibraryManagement.Core.Interfaces.Repositories;
 
 public interface IRepository<T> where T : BaseEntity
 {
