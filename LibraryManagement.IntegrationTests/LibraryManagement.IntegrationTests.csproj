@@ -16,4 +16,12 @@
         <PackageReference Include="coverlet.collector" Version="3.1.2" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\LibraryManagement.API\LibraryManagement.API.csproj" />
+      <ProjectReference Include="..\LibraryManagement.Base\LibraryManagement.Base.csproj" />
+      <ProjectReference Include="..\LibraryManagement.Core\LibraryManagement.Core.csproj" />
+      <ProjectReference Include="..\LibraryManagement.Infrastructure\LibraryManagement.Infrastructure.csproj" />
+      <ProjectReference Include="..\LibraryManagement.Service\LibraryManagement.Service.csproj" />
+    </ItemGroup>
+
 </Project>
