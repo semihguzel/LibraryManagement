@@ -4,4 +4,5 @@ namespace LibraryManagement.Core.Interfaces.Repositories;
 
 public interface IBookRepository : IRepository<Book>
 {
+    Task<Book?> GetByName(string name);
 }
