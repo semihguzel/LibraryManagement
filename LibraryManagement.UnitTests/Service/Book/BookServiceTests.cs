@@ -1,3 +1,5 @@
+using LibraryManagement.Core.Entities;
+using LibraryManagement.Core.Helpers;
 using LibraryManagement.Core.Interfaces.Repositories;
 using LibraryManagement.Core.Interfaces.Services;
 using LibraryManagement.Service.Book;
@@ -21,18 +23,18 @@ public class BookServiceTests
 
     /*
      * TODO:
-     * GetById
+     * GetById - *
      * Add
      * Update
      * Delete
      */
 
     [Test]
-    public void GetById_WithEmptyGuid_ThrowArgumentException()
+    public void GetById_WithEmptyGuid_ThrowArgumentNullException()
     {
         var id = Guid.Empty;
 
-        Assert.ThrowsAsync<ArgumentException>(() => _bookService.GetById(id));
+        Assert.ThrowsAsync<ArgumentNullException>(() => _bookService.GetById(id));
     }
 
     [Test]
@@ -40,18 +42,82 @@ public class BookServiceTests
     {
         var id = Guid.NewGuid();
         Core.Entities.Book result = null;
+
         _bookRepository.Setup(x => x.GetByIdAsync(id)).ReturnsAsync(result);
 
         Assert.That(() => _bookService.GetById(id), Is.Null);
     }
 
     [Test]
-    public void GetById_ExistingId_ReturnObjectWithId()
+    public void GetById_ExistingId_ReturnRelatedObject()
     {
         var id = Guid.NewGuid();
         Core.Entities.Book result = new Core.Entities.Book { Id = id };
+
         _bookRepository.Setup(x => x.GetByIdAsync(id)).ReturnsAsync(result);
 
         Assert.That(() => _bookService.GetById(id), Is.EqualTo(result));
+    }
+
+
+    /*
+     *TODO: ADD -> book null olabilir *
+     *      ADD -> daha önce db'de olabilir, Exception vermeli ve mesaj kontrol edilmeli * 
+     *      ADD -> yoksa eklenir * 
+     *      ADD -> obje property'leri kontrol edilmeli
+     * 
+     */
+    [Test]
+    public void Add_NullObject_ThrowArgumentNullException()
+    {
+        Core.Entities.Book book = null;
+
+        Assert.ThrowsAsync<ArgumentNullException>(() => _bookService.Add(book));
+    }
+
+    [Test]
+    public void Add_ExistingItem_ThrowException()
+    {
+        string name = "Silmarillion";
+        var book = new Core.Entities.Book { Id = Guid.NewGuid(), Name = name };
+
+        _bookRepository.Setup(x => x.GetByName(book.Name)).ReturnsAsync(book);
+
+        var ex = Assert.ThrowsAsync<Exception>(() => _bookService.Add(book));
+        Assert.That(ex.Message, Is.EqualTo("This book already exists. Please entity and try again"));
+    }
+
+    [Test]
+    public void Add_NewItem_CallCreateMethod()
+    {
+        var book = new Core.Entities.Book
+        {
+            Id = Guid.NewGuid(), Name = "Silmarillion",
+            BookCategories = new List<BookCategory> { new BookCategory { Code = "Sci-Fi" } },
+            Author = "Tolkien",
+            Quantity = 1,
+            CreatedDate = DateTime.Now,
+            PageNumber = 873
+        };
+
+        _bookService.Add(book);
+
+        _bookRepository.Verify(x => x.Create(book), Times.Once);
+    }
+
+    [Test]
+    public void Add_WithWrongArgs_ThrowArgumentException()
+    {
+        var book = new Core.Entities.Book
+        {
+            Id = Guid.NewGuid(), Name = "",
+            BookCategories = new List<BookCategory>(),
+            Author = "",
+            Quantity = 0,
+            CreatedDate = DateTime.MinValue,
+            PageNumber = 0
+        };
+
+        Assert.ThrowsAsync<ArgumentException>(() => _bookService.Add(book));
     }
 }
