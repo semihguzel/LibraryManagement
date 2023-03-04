@@ -11,4 +11,27 @@ public class BookService : IBookService
     {
         _bookRepository = bookRepository;
     }
+
+    public async Task<Core.Entities.Book?> GetById(Guid id)
+    {
+        if (id == Guid.Empty)
+            throw new ArgumentException();
+
+        return await _bookRepository.GetByIdAsync(id);
+    }
+
+    public async Task Add(Core.Entities.Book book)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task Update(Core.Entities.Book book)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task Delete(Guid id)
+    {
+        throw new NotImplementedException();
+    }
 }
