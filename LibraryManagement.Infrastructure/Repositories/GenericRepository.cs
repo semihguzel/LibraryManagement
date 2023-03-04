@@ -19,7 +19,7 @@ public class GenericRepository<T> : IRepository<T> where T : BaseEntity
         return await _context.Set<T>().AsNoTracking().ToListAsync();
     }
 
-    public async Task<T> GetByIdAsync(Guid id)
+    public async Task<T?> GetByIdAsync(Guid id)
     {
         return await _context.Set<T>().FindAsync(id);
     }
