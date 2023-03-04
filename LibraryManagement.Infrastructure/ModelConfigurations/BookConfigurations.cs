@@ -22,6 +22,7 @@ public class BookConfigurations : IEntityTypeConfiguration<Book>
             .HasMaxLength(250);
 
         builder.Property(x => x.PageNumber).IsRequired();
+        builder.Property(x => x.Quantity).IsRequired();
 
         builder.HasMany(x => x.BookCategories).WithMany(x => x.Books);
     }
