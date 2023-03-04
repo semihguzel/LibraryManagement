@@ -1,3 +1,4 @@
+using LibraryManagement.Core.Helpers;
 using LibraryManagement.Core.Interfaces.Repositories;
 using LibraryManagement.Core.Interfaces.Services;
 
@@ -15,14 +16,23 @@ public class BookService : IBookService
     public async Task<Core.Entities.Book?> GetById(Guid id)
     {
         if (id == Guid.Empty)
-            throw new ArgumentException();
+            throw new ArgumentNullException();
 
         return await _bookRepository.GetByIdAsync(id);
     }
 
     public async Task Add(Core.Entities.Book book)
     {
-        throw new NotImplementedException();
+        BookServiceHelper.ThrowExceptionIfArgIsNull(book);
+
+        var doesExist = await _bookRepository.GetByName(book.Name) != null;
+
+        if (doesExist)
+            throw new Exception("This book already exists. Please entity and try again");
+
+        BookServiceHelper.CheckArgsForException(book);
+
+        await _bookRepository.Create(book);
     }
 
     public async Task Update(Core.Entities.Book book)
