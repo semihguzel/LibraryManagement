@@ -52,6 +52,14 @@ public class BookService : IBookService
 
     public async Task Delete(Guid id)
     {
-        throw new NotImplementedException();
+        if (id == Guid.Empty)
+            throw new ArgumentException();
+
+        var doesExists = await _bookRepository.GetByIdAsync(id) != null;
+
+        if (!doesExists)
+            throw new ArgumentException("Book does not exists. Please check the entity.");
+
+        await _bookRepository.Delete(id);
     }
 }
