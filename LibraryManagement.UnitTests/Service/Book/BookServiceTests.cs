@@ -24,7 +24,7 @@ public class BookServiceTests
 
         _bookWithWrongProps = new Core.Entities.Book
         {
-            Id = Guid.NewGuid(), Name = "",
+            Id = Guid.Empty, Name = "",
             BookCategories = new List<BookCategory>(),
             Author = "",
             Quantity = 0,
@@ -113,7 +113,7 @@ public class BookServiceTests
     {
         Assert.ThrowsAsync<ArgumentException>(() => _bookService.Add(_bookWithWrongProps));
     }
-    
+
     [Test]
     public void Update_NullObject_ThrowArgumentNullException()
     {
@@ -148,5 +148,43 @@ public class BookServiceTests
 
         _bookRepository.Verify(x => x.GetByName(_bookWithProperProps.Name), Times.Once);
         _bookRepository.Verify(x => x.Update(_bookWithProperProps), Times.Once);
+    }
+
+    /*
+     * Delete =>
+     *          id might be Guid.Empty *
+     *          id would not exist in db *
+     *          after these controls pass, Delete method can be called *
+     *          TODO: book with given id might have a loan, in that case it shouldn't be deleted. - will be written after LoanRepository-LoanService added.
+     */
+
+    [Test]
+    public void Delete_EmptyGuid_ThrowArgumentException()
+    {
+        Assert.ThrowsAsync<ArgumentException>(() => _bookService.Delete(_bookWithWrongProps.Id));
+    }
+
+    [Test]
+    public void Delete_NotExistingId_ThrowArgumentExceptionWithMessage()
+    {
+        Core.Entities.Book returnObject = null;
+        _bookRepository.Setup(x => x.GetByIdAsync(_bookWithProperProps.Id)).ReturnsAsync(returnObject);
+
+        var ex = Assert.ThrowsAsync<ArgumentException>(() => _bookService.Delete(_bookWithProperProps.Id));
+        _bookRepository.Verify(x => x.GetByIdAsync(_bookWithProperProps.Id), Times.Once);
+
+        Assert.That(ex.Message, Is.EqualTo("Book does not exists. Please check the entity."));
+    }
+
+    [Test]
+    public void Delete_ProperArgs_CallDeleteMethod()
+    {
+        _bookRepository.Setup(x => x.GetByIdAsync(_bookWithProperProps.Id))
+            .ReturnsAsync(_bookWithProperProps);
+
+        _bookService.Delete(_bookWithProperProps.Id);
+
+        _bookRepository.Verify(x => x.GetByIdAsync(_bookWithProperProps.Id), Times.Once);
+        _bookRepository.Verify(x => x.Delete(_bookWithProperProps.Id), Times.Once);
     }
 }
