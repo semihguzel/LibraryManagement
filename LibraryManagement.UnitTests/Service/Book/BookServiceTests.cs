@@ -13,19 +13,40 @@ public class BookServiceTests
 {
     private Mock<IBookRepository> _bookRepository;
     private IBookService _bookService;
+    private Core.Entities.Book _bookWithWrongProps;
+    private Core.Entities.Book _bookWithProperProps;
 
     [SetUp]
     public void SetUp()
     {
         _bookRepository = new Mock<IBookRepository>();
         _bookService = new BookService(_bookRepository.Object);
+
+        _bookWithWrongProps = new Core.Entities.Book
+        {
+            Id = Guid.NewGuid(), Name = "",
+            BookCategories = new List<BookCategory>(),
+            Author = "",
+            Quantity = 0,
+            CreatedDate = DateTime.MinValue,
+            PageNumber = 0
+        };
+        _bookWithProperProps = new Core.Entities.Book
+        {
+            Id = Guid.NewGuid(), Name = "Silmarillion",
+            BookCategories = new List<BookCategory> { new BookCategory { Code = "Sci-Fi" } },
+            Author = "Tolkien",
+            Quantity = 1,
+            CreatedDate = DateTime.Now,
+            PageNumber = 873
+        };
     }
 
     /*
      * TODO:
      * GetById - *
-     * Add
-     * Update
+     * Add - *
+     * Update - *
      * Delete
      */
 
@@ -59,14 +80,6 @@ public class BookServiceTests
         Assert.That(() => _bookService.GetById(id), Is.EqualTo(result));
     }
 
-
-    /*
-     *TODO: ADD -> book null olabilir *
-     *      ADD -> daha önce db'de olabilir, Exception vermeli ve mesaj kontrol edilmeli * 
-     *      ADD -> yoksa eklenir * 
-     *      ADD -> obje property'leri kontrol edilmeli
-     * 
-     */
     [Test]
     public void Add_NullObject_ThrowArgumentNullException()
     {
@@ -83,41 +96,57 @@ public class BookServiceTests
 
         _bookRepository.Setup(x => x.GetByName(book.Name)).ReturnsAsync(book);
 
-        var ex = Assert.ThrowsAsync<Exception>(() => _bookService.Add(book));
+        var ex = Assert.ThrowsAsync<ArgumentException>(() => _bookService.Add(book));
         Assert.That(ex.Message, Is.EqualTo("This book already exists. Please entity and try again"));
     }
 
     [Test]
     public void Add_NewItem_CallCreateMethod()
     {
-        var book = new Core.Entities.Book
-        {
-            Id = Guid.NewGuid(), Name = "Silmarillion",
-            BookCategories = new List<BookCategory> { new BookCategory { Code = "Sci-Fi" } },
-            Author = "Tolkien",
-            Quantity = 1,
-            CreatedDate = DateTime.Now,
-            PageNumber = 873
-        };
+        _bookService.Add(_bookWithProperProps);
 
-        _bookService.Add(book);
-
-        _bookRepository.Verify(x => x.Create(book), Times.Once);
+        _bookRepository.Verify(x => x.Create(_bookWithProperProps), Times.Once);
     }
 
     [Test]
     public void Add_WithWrongArgs_ThrowArgumentException()
     {
-        var book = new Core.Entities.Book
-        {
-            Id = Guid.NewGuid(), Name = "",
-            BookCategories = new List<BookCategory>(),
-            Author = "",
-            Quantity = 0,
-            CreatedDate = DateTime.MinValue,
-            PageNumber = 0
-        };
+        Assert.ThrowsAsync<ArgumentException>(() => _bookService.Add(_bookWithWrongProps));
+    }
+    
+    [Test]
+    public void Update_NullObject_ThrowArgumentNullException()
+    {
+        Core.Entities.Book book = null;
 
-        Assert.ThrowsAsync<ArgumentException>(() => _bookService.Add(book));
+        Assert.ThrowsAsync<ArgumentNullException>(() => _bookService.Update(book));
+    }
+
+    [Test]
+    public void Update_WithWrongArgs_ThrowArgumentException()
+    {
+        Assert.ThrowsAsync<ArgumentException>(() => _bookService.Update(_bookWithWrongProps));
+    }
+
+    [Test]
+    public void Update_NonExistingItem_ThrowArgumentExceptionWithMessage()
+    {
+        Core.Entities.Book returnObject = null;
+        _bookRepository.Setup(x => x.GetByName(_bookWithProperProps.Name)).ReturnsAsync(returnObject);
+
+        var ex = Assert.ThrowsAsync<ArgumentException>(() => _bookService.Update(_bookWithProperProps));
+
+        Assert.That(ex.Message, Is.EqualTo("Book does not exists. Please check the entity."));
+    }
+
+    [Test]
+    public void Update_ExistingProperArgs_CallUpdateMethod()
+    {
+        _bookRepository.Setup(x => x.GetByName(_bookWithProperProps.Name)).ReturnsAsync(_bookWithProperProps);
+
+        _bookService.Update(_bookWithProperProps);
+
+        _bookRepository.Verify(x => x.GetByName(_bookWithProperProps.Name), Times.Once);
+        _bookRepository.Verify(x => x.Update(_bookWithProperProps), Times.Once);
     }
 }
