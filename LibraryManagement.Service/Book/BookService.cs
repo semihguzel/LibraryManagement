@@ -7,10 +7,12 @@ namespace LibraryManagement.Service.Book;
 public class BookService : IBookService
 {
     private readonly IBookRepository _bookRepository;
+    private readonly IBookCategoryService _bookCategoryService;
 
-    public BookService(IBookRepository bookRepository)
+    public BookService(IBookRepository bookRepository, IBookCategoryService bookCategoryService)
     {
         _bookRepository = bookRepository;
+        _bookCategoryService = bookCategoryService;
     }
 
     public async Task<Core.Entities.Book?> GetById(Guid id)
@@ -61,5 +63,31 @@ public class BookService : IBookService
             throw new ArgumentException("Book does not exists. Please check the entity.");
 
         await _bookRepository.Delete(id);
+    }
+
+    public async Task<Core.Entities.Book?> GetByName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException();
+
+        return await _bookRepository.GetByName(name);
+    }
+
+    public async Task<List<Core.Entities.Book>?> GetBooksByCategoryCode(string categoryCode)
+    {
+        if (string.IsNullOrWhiteSpace(categoryCode))
+            throw new ArgumentException();
+
+        var doesCategoryExists = await _bookCategoryService.GetByCode(categoryCode) != null;
+
+        if (!doesCategoryExists)
+            throw new ArgumentException("Category does not exists.");
+
+        return await _bookRepository.GetByCategoryCode(categoryCode);
+    }
+
+    public async Task<List<Core.Entities.Book>> GetBooksByCategoryId(Guid categoryId)
+    {
+        throw new NotImplementedException();
     }
 }
