@@ -2,6 +2,7 @@ using LibraryManagement.Core.Entities;
 using LibraryManagement.Core.Helpers;
 using LibraryManagement.Core.Interfaces.Repositories;
 using LibraryManagement.Core.Interfaces.Services;
+using LibraryManagement.Infrastructure.Repositories;
 using LibraryManagement.Service.Book;
 using Moq;
 using NUnit.Framework;
@@ -15,17 +16,26 @@ public class BookServiceTests
     private IBookService _bookService;
     private Core.Entities.Book _bookWithWrongProps;
     private Core.Entities.Book _bookWithProperProps;
+    private readonly string _nullString = null;
+    private readonly string _whiteSpaceString = "             ";
+    private Mock<IBookCategoryRepository> _bookCategoryRepository;
+    private IBookCategoryService _bookCategoryService;
+    private Core.Entities.BookCategory _properBookCategory;
+
+    #region SetUp
 
     [SetUp]
     public void SetUp()
     {
         _bookRepository = new Mock<IBookRepository>();
-        _bookService = new BookService(_bookRepository.Object);
+        _bookCategoryRepository = new Mock<IBookCategoryRepository>();
+        _bookCategoryService = new BookCategoryService(_bookCategoryRepository.Object);
+        _bookService = new BookService(_bookRepository.Object, _bookCategoryService);
 
         _bookWithWrongProps = new Core.Entities.Book
         {
             Id = Guid.Empty, Name = "",
-            BookCategories = new List<BookCategory>(),
+            BookCategories = new List<Core.Entities.BookCategory>(),
             Author = "",
             Quantity = 0,
             CreatedDate = DateTime.MinValue,
@@ -34,51 +44,38 @@ public class BookServiceTests
         _bookWithProperProps = new Core.Entities.Book
         {
             Id = Guid.NewGuid(), Name = "Silmarillion",
-            BookCategories = new List<BookCategory> { new BookCategory { Code = "Sci-Fi" } },
+            BookCategories =
+                new List<Core.Entities.BookCategory> { new() { Code = "scifi" } },
             Author = "Tolkien",
             Quantity = 1,
             CreatedDate = DateTime.Now,
             PageNumber = 873
         };
+        _properBookCategory = new Core.Entities.BookCategory
+        {
+            Id = Guid.NewGuid(),
+            Code = "scifi",
+            Description = "Sci-Fi",
+            CreatedDate = DateTime.Now,
+            Books = new List<Core.Entities.Book>
+            {
+                new()
+                {
+                    Id = Guid.NewGuid(), Name = "Silmarillion",
+                    BookCategories = new List<Core.Entities.BookCategory>
+                        { new() { Code = "scifi" } },
+                    Author = "Tolkien",
+                    Quantity = 1,
+                    CreatedDate = DateTime.Now,
+                    PageNumber = 873
+                }
+            }
+        };
     }
 
-    /*
-     * TODO:
-     * GetById - *
-     * Add - *
-     * Update - *
-     * Delete
-     */
-
-    [Test]
-    public void GetById_WithEmptyGuid_ThrowArgumentNullException()
-    {
-        var id = Guid.Empty;
-
-        Assert.ThrowsAsync<ArgumentNullException>(() => _bookService.GetById(id));
-    }
-
-    [Test]
-    public void GetById_NotExistingId_ReturnNull()
-    {
-        var id = Guid.NewGuid();
-        Core.Entities.Book result = null;
-
-        _bookRepository.Setup(x => x.GetByIdAsync(id)).ReturnsAsync(result);
-
-        Assert.That(() => _bookService.GetById(id), Is.Null);
-    }
-
-    [Test]
-    public void GetById_ExistingId_ReturnRelatedObject()
-    {
-        var id = Guid.NewGuid();
-        Core.Entities.Book result = new Core.Entities.Book { Id = id };
-
-        _bookRepository.Setup(x => x.GetByIdAsync(id)).ReturnsAsync(result);
-
-        Assert.That(() => _bookService.GetById(id), Is.EqualTo(result));
-    }
+    #endregion
+    
+    #region Crud Tests
 
     [Test]
     public void Add_NullObject_ThrowArgumentNullException()
@@ -152,9 +149,6 @@ public class BookServiceTests
 
     /*
      * Delete =>
-     *          id might be Guid.Empty *
-     *          id would not exist in db *
-     *          after these controls pass, Delete method can be called *
      *          TODO: book with given id might have a loan, in that case it shouldn't be deleted. - will be written after LoanRepository-LoanService added.
      */
 
@@ -187,4 +181,124 @@ public class BookServiceTests
         _bookRepository.Verify(x => x.GetByIdAsync(_bookWithProperProps.Id), Times.Once);
         _bookRepository.Verify(x => x.Delete(_bookWithProperProps.Id), Times.Once);
     }
+
+    #endregion
+
+    #region GetById Tests
+
+    [Test]
+    public void GetById_WithEmptyGuid_ThrowArgumentNullException()
+    {
+        var id = Guid.Empty;
+
+        Assert.ThrowsAsync<ArgumentNullException>(() => _bookService.GetById(id));
+    }
+
+    [Test]
+    public void GetById_NotExistingId_ReturnNull()
+    {
+        var id = Guid.NewGuid();
+        Core.Entities.Book result = null;
+
+        _bookRepository.Setup(x => x.GetByIdAsync(id)).ReturnsAsync(result);
+
+        Assert.That(() => _bookService.GetById(id), Is.Null);
+    }
+
+    [Test]
+    public void GetById_ExistingId_ReturnRelatedObject()
+    {
+        var id = Guid.NewGuid();
+        Core.Entities.Book result = new Core.Entities.Book { Id = id };
+
+        _bookRepository.Setup(x => x.GetByIdAsync(id)).ReturnsAsync(result);
+
+        Assert.That(() => _bookService.GetById(id), Is.EqualTo(result));
+    }
+
+    #endregion
+
+    #region GetByName Tests
+
+    [Test]
+    public void GetByName_NullOrWhiteSpaceArg_ThrowArgumentException()
+    {
+        Assert.ThrowsAsync<ArgumentException>(() => _bookService.GetByName(_nullString));
+        Assert.ThrowsAsync<ArgumentException>(() => _bookService.GetByName(_whiteSpaceString));
+    }
+
+    [Test]
+    public void GetByName_NonExistingName_ReturnNull()
+    {
+        string existingName = "Silmarillion";
+        Core.Entities.Book nullObject = null;
+
+        _bookRepository.Setup(x => x.GetByName(existingName)).ReturnsAsync(nullObject);
+
+        Assert.That(() => _bookService.GetByName(existingName), Is.Null);
+    }
+
+    [Test]
+    public void GetByName_ExistingName_ReturnRelatedObject()
+    {
+        string existingName = "Silmarillion";
+
+        _bookRepository.Setup(x => x.GetByName(existingName)).ReturnsAsync(_bookWithProperProps);
+
+        Assert.That(() => _bookService.GetByName(existingName), Is.EqualTo(_bookWithProperProps));
+    }
+
+    #endregion
+
+    #region GetBooksByCategoryName Tests
+
+    [Test]
+    public void GetBooksByCategoryCode_NullOrWhiteSpaceArg_ThrowArgumentException()
+    {
+        Assert.ThrowsAsync<ArgumentException>(() => _bookService.GetBooksByCategoryCode(_nullString));
+        Assert.ThrowsAsync<ArgumentException>(() => _bookService.GetBooksByCategoryCode(_whiteSpaceString));
+    }
+
+    [Test]
+    public void GetBooksByCategoryCode_NonExistingCategory_ThrowArgumentException()
+    {
+        var nonExistingCategoryCode = "novel";
+        Core.Entities.BookCategory nullCategoryObject = null;
+
+        _bookCategoryRepository.Setup(x => x.GetByCode(nonExistingCategoryCode)).ReturnsAsync(nullCategoryObject);
+
+        var ex = Assert.ThrowsAsync<ArgumentException>(() =>
+            _bookService.GetBooksByCategoryCode(nonExistingCategoryCode));
+
+        Assert.That(ex.Message, Is.EqualTo("Category does not exists."));
+    }
+
+    [Test]
+    public void GetBooksByCategoryCode_ExistingCategory_ReturnsEmptyList()
+    {
+        var existingCategoryName = "Sci-Fi";
+        var expectedResultList = new List<Core.Entities.Book>();
+
+        _bookCategoryRepository.Setup(x => x.GetByCode(existingCategoryName)).ReturnsAsync(_properBookCategory);
+        _bookRepository.Setup(x => x.GetByCategoryCode(existingCategoryName)).ReturnsAsync(expectedResultList);
+
+        Assert.That(() => _bookService.GetBooksByCategoryCode(existingCategoryName),
+            Is.Empty);
+    }
+
+    [Test]
+    public void GetBooksByCategoryCode_ExistingCategory_ReturnItemsInGivenCategory()
+    {
+        var existingCategoryName = "Sci-Fi";
+        var expectedResultList = new List<Core.Entities.Book> { _bookWithProperProps };
+
+        _bookCategoryRepository.Setup(x => x.GetByCode(existingCategoryName)).ReturnsAsync(_properBookCategory);
+        _bookRepository.Setup(x => x.GetByCategoryCode(existingCategoryName)).ReturnsAsync(expectedResultList);
+
+
+        Assert.That(() => _bookService.GetBooksByCategoryCode(existingCategoryName),
+            Contains.Item(_bookWithProperProps));
+    }
+
+    #endregion
 }
