@@ -88,13 +88,10 @@ public class BookServiceTests
     [Test]
     public void Add_ExistingItem_ThrowException()
     {
-        string name = "Silmarillion";
-        var book = new Core.Entities.Book { Id = Guid.NewGuid(), Name = name };
+        _bookRepository.Setup(x => x.GetByName(_bookWithProperProps.Name)).ReturnsAsync(_bookWithProperProps);
 
-        _bookRepository.Setup(x => x.GetByName(book.Name)).ReturnsAsync(book);
-
-        var ex = Assert.ThrowsAsync<ArgumentException>(() => _bookService.Add(book));
-        Assert.That(ex.Message, Is.EqualTo("This book already exists. Please entity and try again"));
+        var ex = Assert.ThrowsAsync<ArgumentException>(() => _bookService.Add(_bookWithProperProps));
+        Assert.That(ex.Message, Is.EqualTo("This book already exists."));
     }
 
     [Test]

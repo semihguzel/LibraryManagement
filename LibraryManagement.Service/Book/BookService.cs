@@ -25,29 +25,24 @@ public class BookService : IBookService
 
     public async Task Add(Core.Entities.Book book)
     {
-        BookServiceHelper.ThrowExceptionIfArgIsNull(book);
-
+        BookServiceHelper.CheckArgsForException(book);
+        
         var doesExists = await _bookRepository.GetByName(book.Name) != null;
 
         if (doesExists)
-            throw new ArgumentException("This book already exists. Please entity and try again");
-
-        BookServiceHelper.CheckArgsForException(book);
+            throw new ArgumentException("This book already exists.");
 
         await _bookRepository.Create(book);
     }
 
     public async Task Update(Core.Entities.Book book)
     {
-        if (book == null)
-            throw new ArgumentNullException();
-
+        BookServiceHelper.CheckArgsForException(book);
+        
         var doesExists = await _bookRepository.GetByName(book.Name) != null;
 
         if (!doesExists)
             throw new ArgumentException("Book does not exists. Please check the entity.");
-
-        BookServiceHelper.CheckArgsForException(book);
 
         await _bookRepository.Update(book);
     }
