@@ -14,6 +14,9 @@ public class BookCategoryServiceTests
     private readonly string _nullString = null;
     private readonly string _whiteSpaceString = "             ";
     private Core.Entities.BookCategory _properBookCategory;
+    private Core.Entities.BookCategory _wrongBookCategory;
+
+    #region SetUp
 
     [SetUp]
     public void SetUp()
@@ -40,7 +43,57 @@ public class BookCategoryServiceTests
                 }
             }
         };
+        _wrongBookCategory = new Core.Entities.BookCategory
+        {
+            Id = Guid.Empty,
+            Code = "         ",
+            Description = "",
+            CreatedDate = DateTime.MinValue,
+            Books = new List<Core.Entities.Book>
+            {
+            }
+        };
     }
+
+    #endregion
+
+    #region Crud Tests
+
+    [Test]
+    public void Add_WithNullObject_ThrowNullArgumentException()
+    {
+        Core.Entities.BookCategory nullObject = null;
+
+        Assert.ThrowsAsync<ArgumentNullException>(() => _bookCategoryService.Add(nullObject));
+    }
+
+    [Test]
+    public void Add_WithExistingItem_ThrowExceptionWithMessage()
+    {
+        var categoryCode = _properBookCategory.Code;
+        _bookCategoryRepository.Setup(x => x.GetByCode(categoryCode)).ReturnsAsync(_properBookCategory);
+
+        var ex = Assert.ThrowsAsync<ArgumentException>(() => _bookCategoryService.Add(_properBookCategory));
+        Assert.That(ex.Message, Is.EqualTo("This book category already exists."));
+    }
+
+    [Test]
+    public void Add_WithWrongArgs_ThrowArgumentException()
+    {
+        Assert.ThrowsAsync<ArgumentException>(() => _bookCategoryService.Add(_wrongBookCategory));
+    }
+
+    [Test]
+    public void Update_WithNullObject_ReturnNullException()
+    {
+        Core.Entities.BookCategory nullObject = null;
+
+        Assert.ThrowsAsync<ArgumentNullException>(() => _bookCategoryService.Update(nullObject));
+    }
+
+    #endregion
+
+    #region GetByName
 
     [Test]
     public void GetByName_NullOrWhiteSpaceArg_ThrowArgumentException()
@@ -69,4 +122,6 @@ public class BookCategoryServiceTests
 
         Assert.That(() => _bookCategoryService.GetByCode(existingCode), Is.EqualTo(_properBookCategory));
     }
+
+    #endregion
 }

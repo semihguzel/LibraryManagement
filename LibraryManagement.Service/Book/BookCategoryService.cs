@@ -1,4 +1,5 @@
 ﻿using LibraryManagement.Core.Entities;
+using LibraryManagement.Core.Helpers;
 using LibraryManagement.Core.Interfaces.Repositories;
 using LibraryManagement.Core.Interfaces.Services;
 
@@ -13,13 +14,22 @@ public class BookCategoryService : IBookCategoryService
         _bookCategoryRepository = bookCategoryRepository;
     }
 
-    public async Task Add(BookCategory book)
+    public async Task Add(BookCategory bookCategory)
     {
-        throw new NotImplementedException();
+        BookCategoryServiceHelper.CheckArgsForException(bookCategory);
+
+        var doesAlreadyExists = await GetByCode(bookCategory.Code) != null;
+
+        if (doesAlreadyExists)
+            throw new ArgumentException("This book category already exists.");
+
+        await _bookCategoryRepository.Create(bookCategory);
     }
 
     public async Task Update(BookCategory book)
     {
+        if (book == null)
+            throw new ArgumentNullException();
         throw new NotImplementedException();
     }
 
