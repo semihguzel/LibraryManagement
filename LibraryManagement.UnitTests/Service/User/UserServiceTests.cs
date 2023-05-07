@@ -158,5 +158,41 @@ public class UserServiceTests
 
     #endregion
 
+    #region GetByUsername
+
+    [Test]
+    public void GetByUsername_WithNullOrWhitespaceName_ThrowArgumentExceptionWithMessage()
+    {
+        var ex = Assert.ThrowsAsync<ArgumentException>(() => _userService.GetByUsername(_improperUser.Username));
+        
+        Assert.That(ex.Message, Is.EqualTo("Username cannot be empty or null."));
+    }
+
+    #endregion
+    
+    #region GetByEmail
+
+    [Test]
+    public void GetByEmail_WithNullOrWhitespaceName_ThrowArgumentExceptionWithMessage()
+    {
+        var ex = Assert.ThrowsAsync<ArgumentException>(() => _userService.GetByEmail(_improperUser.Email));
+        
+        Assert.That(ex.Message, Is.EqualTo("Email cannot be empty or null."));
+    }
+
+    #endregion
+    
+    #region GetByPhone
+
+    [Test]
+    public void GetByPhone_WithNullOrWhitespaceName_ThrowArgumentExceptionWithMessage()
+    {
+        var ex = Assert.ThrowsAsync<ArgumentException>(() => _userService.GetByPhone(_improperUser.Phone));
+        
+        Assert.That(ex.Message, Is.EqualTo("Phone cannot be empty or null."));
+    }
+
+    #endregion
+
     #endregion
 }

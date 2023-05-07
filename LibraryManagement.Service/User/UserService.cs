@@ -52,16 +52,25 @@ public class UserService : IUserService
 
     public async Task<Core.Entities.User?> GetByUsername(string name)
     {
-        throw new NotImplementedException();
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ArgumentException("Username cannot be empty or null.");
+
+        return await _userRepository.GetByUsername(name);
     }
 
     public async Task<Core.Entities.User?> GetByEmail(string email)
     {
-        throw new NotImplementedException();
+        if (string.IsNullOrWhiteSpace(email))
+            throw new ArgumentException("Email cannot be empty or null.");
+
+        return await _userRepository.GetByEmail(email);
     }
 
     public async Task<Core.Entities.User?> GetByPhone(string phone)
     {
-        throw new NotImplementedException();
+        if (string.IsNullOrWhiteSpace(phone))
+            throw new ArgumentException("Phone cannot be empty or null.");
+
+        return await _userRepository.GetByPhone(phone);
     }
 }
