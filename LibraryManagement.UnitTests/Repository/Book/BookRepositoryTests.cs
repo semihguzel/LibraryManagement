@@ -18,17 +18,6 @@ public class BookRepositoryTests
         _bookRepositoryMock = new Mock<IBookRepository>();
     }
 
-    /*
-     * GetByName
-     */
-
-    /*
-     * GetByName => name parametresi;
-     *                  -boş olabilir
-     *                  -dolu ve veritabanında olabilir
-     *                  -dolu ve veritabanında olmayabilir
-     */
-
     [TestCase("")]
     [TestCase(null)]
     [TestCase("              ")]

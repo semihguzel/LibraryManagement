@@ -1,6 +1,6 @@
 ﻿using LibraryManagement.Core.Entities;
 
-namespace LibraryManagement.Core.Helpers;
+namespace LibraryManagement.Core.Helpers.BookHelpers;
 
 public static class BookServiceHelper
 {
