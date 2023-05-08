@@ -140,4 +140,40 @@ public class LoanServiceTests
     #endregion
 
     #endregion
+
+    #region GetById
+
+    [Test]
+    public void GetById_WithEmptyGuid_ThrowArgumentExceptionWithMessage()
+    {
+        var ex = Assert.ThrowsAsync<ArgumentException>(() => _loanService.GetById(_improperObj.Id));
+        
+        Assert.That(ex.Message, Is.EqualTo("Please enter a valid id."));
+    }
+
+    #endregion
+
+    #region GetAllByBookId
+
+    [Test]
+    public void GetAllByBookId_WithEmptyGuid_ThrowArgumentExceptionWithMessage()
+    {
+        var ex = Assert.ThrowsAsync<ArgumentException>(() => _loanService.GetAllByBookId(_improperObj.BookId));
+        
+        Assert.That(ex.Message, Is.EqualTo("Please enter a valid id."));
+    }
+
+    #endregion
+
+    #region GetAllByUserId
+
+    [Test]
+    public void GetAllByUserId_WithEmptyGuid_ThrowArgumentExceptionWithMessage()
+    {
+        var ex = Assert.ThrowsAsync<ArgumentException>(() => _loanService.GetAllByUserId(_improperObj.UserId));
+        
+        Assert.That(ex.Message, Is.EqualTo("Please enter a valid id."));
+    }
+
+    #endregion
 }

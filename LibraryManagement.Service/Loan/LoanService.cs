@@ -64,16 +64,25 @@ public class LoanService : ILoanService
 
     public async Task<Core.Entities.Loan?> GetById(Guid id)
     {
-        throw new NotImplementedException();
+        if (id == Guid.Empty)
+            throw new ArgumentException("Please enter a valid id.");
+
+        return await _loanRepository.GetByIdAsync(id);
     }
 
-    public async Task<List<Core.Entities.Loan>?> GetByBookId(Guid bookId)
+    public async Task<List<Core.Entities.Loan>?> GetAllByBookId(Guid bookId)
     {
-        throw new NotImplementedException();
+        if (bookId == Guid.Empty)
+            throw new ArgumentException("Please enter a valid id.");
+
+        return await _loanRepository.GetAllByBookId(bookId);
     }
 
-    public async Task<List<Core.Entities.Loan>> GetByUserId(Guid userId)
+    public async Task<List<Core.Entities.Loan>> GetAllByUserId(Guid userId)
     {
-        throw new NotImplementedException();
+        if (userId == Guid.Empty)
+            throw new ArgumentException("Please enter a valid id.");
+
+        return await _loanRepository.GetAllByUserId(userId);
     }
 }
