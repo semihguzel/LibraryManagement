@@ -1,9 +1,13 @@
-using LibraryManagement.Core.Entities;
-using LibraryManagement.Core.Helpers;
 using LibraryManagement.Core.Interfaces.Repositories;
 using LibraryManagement.Core.Interfaces.Services;
-using LibraryManagement.Infrastructure.Repositories;
+using LibraryManagement.Infrastructure;
 using LibraryManagement.Service.Book;
+using LibraryManagement.Service.Loan;
+using LibraryManagement.UnitTests.Helpers;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Moq;
 using NUnit.Framework;
 
@@ -12,15 +16,45 @@ namespace LibraryManagement.UnitTests.Service.Book;
 [TestFixture]
 public class BookServiceTests
 {
+    private DependencyResolverHelper _serviceProvider;
+
     private Mock<IBookRepository> _bookRepository;
     private IBookService _bookService;
-    private Core.Entities.Book _bookWithWrongProps;
-    private Core.Entities.Book _bookWithProperProps;
-    private readonly string _nullString = null;
-    private readonly string _whiteSpaceString = "             ";
     private Mock<IBookCategoryRepository> _bookCategoryRepository;
     private IBookCategoryService _bookCategoryService;
+
+    private Core.Entities.Book _bookWithWrongProps;
+    private Core.Entities.Book _bookWithProperProps;
     private Core.Entities.BookCategory _properBookCategory;
+
+    private readonly string _nullString = null;
+    private readonly string _whiteSpaceString = "             ";
+
+    public BookServiceTests()
+    {
+        var host = Host
+            .CreateDefaultBuilder()
+            .ConfigureServices((sc) =>
+            {
+                sc.AddDbContext<LibraryContext>();
+                sc.AddScoped<IBookRepository>(p => _bookRepository.Object);
+                sc.AddScoped<IBookCategoryRepository>(p => _bookCategoryRepository.Object);
+                sc.AddScoped<IBookCategoryService, BookCategoryService>();
+                sc.AddScoped<IBookService, BookService>();
+            })
+            .ConfigureWebHostDefaults(webBuilder =>
+            {
+                webBuilder.Configure((ctx, app) =>
+                {
+                    if (ctx.HostingEnvironment.IsDevelopment())
+                        app.UseDeveloperExceptionPage();
+
+                    app.UseStaticFiles();
+                });
+            })
+            .Build();
+        _serviceProvider = new DependencyResolverHelper(host);
+    }
 
     #region SetUp
 
@@ -29,8 +63,7 @@ public class BookServiceTests
     {
         _bookRepository = new Mock<IBookRepository>();
         _bookCategoryRepository = new Mock<IBookCategoryRepository>();
-        _bookCategoryService = new BookCategoryService(_bookCategoryRepository.Object);
-        _bookService = new BookService(_bookRepository.Object, _bookCategoryService);
+        _bookService = _serviceProvider.GetService<IBookService>();
 
         _bookWithWrongProps = new Core.Entities.Book
         {
@@ -49,7 +82,7 @@ public class BookServiceTests
             Author = "Tolkien",
             Quantity = 1,
             CreatedDate = DateTime.Now,
-            PageNumber = 873
+            PageNumber = 873,
         };
         _properBookCategory = new Core.Entities.BookCategory
         {
@@ -74,8 +107,10 @@ public class BookServiceTests
     }
 
     #endregion
-    
+
     #region Crud Tests
+
+    #region Add
 
     [Test]
     public void Add_NullObject_ThrowArgumentNullException()
@@ -107,6 +142,10 @@ public class BookServiceTests
     {
         Assert.ThrowsAsync<ArgumentException>(() => _bookService.Add(_bookWithWrongProps));
     }
+
+    #endregion
+
+    #region Update
 
     [Test]
     public void Update_NullObject_ThrowArgumentNullException()
@@ -144,10 +183,9 @@ public class BookServiceTests
         _bookRepository.Verify(x => x.Update(_bookWithProperProps), Times.Once);
     }
 
-    /*
-     * Delete =>
-     *          TODO: book with given id might have a loan, in that case it shouldn't be deleted. - will be written after LoanRepository-LoanService added.
-     */
+    #endregion
+
+    #region Delete
 
     [Test]
     public void Delete_EmptyGuid_ThrowArgumentException()
@@ -178,6 +216,8 @@ public class BookServiceTests
         _bookRepository.Verify(x => x.GetByIdAsync(_bookWithProperProps.Id), Times.Once);
         _bookRepository.Verify(x => x.Delete(_bookWithProperProps.Id), Times.Once);
     }
+
+    #endregion
 
     #endregion
 
