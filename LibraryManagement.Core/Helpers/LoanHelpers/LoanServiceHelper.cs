@@ -16,4 +16,9 @@ public static class LoanServiceHelper
             loan.BookId == Guid.Empty)
             throw new ArgumentException();
     }
+
+    public static bool CheckListForActiveLoans(List<Loan> loans)
+    {
+        return loans.Any(x => x.DueDate.Date > DateTime.Today);
+    }
 }

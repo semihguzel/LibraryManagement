@@ -22,10 +22,13 @@ public class BookServiceTests
     private IBookService _bookService;
     private Mock<IBookCategoryRepository> _bookCategoryRepository;
     private IBookCategoryService _bookCategoryService;
+    private Mock<ILoanRepository> _loanRepository;
+    private ILoanService _loanService;
 
     private Core.Entities.Book _bookWithWrongProps;
     private Core.Entities.Book _bookWithProperProps;
     private Core.Entities.BookCategory _properBookCategory;
+    private Core.Entities.Loan _properLoan;
 
     private readonly string _nullString = null;
     private readonly string _whiteSpaceString = "             ";
@@ -37,10 +40,14 @@ public class BookServiceTests
             .ConfigureServices((sc) =>
             {
                 sc.AddDbContext<LibraryContext>();
+                
                 sc.AddScoped<IBookRepository>(p => _bookRepository.Object);
                 sc.AddScoped<IBookCategoryRepository>(p => _bookCategoryRepository.Object);
+                sc.AddScoped<ILoanRepository>(p => _loanRepository.Object);
+                
                 sc.AddScoped<IBookCategoryService, BookCategoryService>();
                 sc.AddScoped<IBookService, BookService>();
+                sc.AddScoped<ILoanService, LoanService>();
             })
             .ConfigureWebHostDefaults(webBuilder =>
             {
@@ -63,7 +70,10 @@ public class BookServiceTests
     {
         _bookRepository = new Mock<IBookRepository>();
         _bookCategoryRepository = new Mock<IBookCategoryRepository>();
+        _loanRepository = new Mock<ILoanRepository>();
+
         _bookService = _serviceProvider.GetService<IBookService>();
+        _loanService = _serviceProvider.GetService<ILoanService>();
 
         _bookWithWrongProps = new Core.Entities.Book
         {
@@ -103,6 +113,15 @@ public class BookServiceTests
                     PageNumber = 873
                 }
             }
+        };
+
+        _properLoan = new Core.Entities.Loan
+        {
+            BookId = _bookWithProperProps.Id,
+            CreatedDate = DateTime.Today,
+            ReceivedDate = DateTime.Now.AddDays(1),
+            LentDate = DateTime.Today,
+            DueDate = DateTime.Today.AddDays(5)
         };
     }
 
@@ -215,6 +234,31 @@ public class BookServiceTests
 
         _bookRepository.Verify(x => x.GetByIdAsync(_bookWithProperProps.Id), Times.Once);
         _bookRepository.Verify(x => x.Delete(_bookWithProperProps.Id), Times.Once);
+    }
+
+
+    [Test]
+    public void Delete_WithExistingLoan_ThrowExceptionWithError()
+    {
+        _bookWithProperProps.Loans = new List<Core.Entities.Loan>
+        {
+            new()
+            {
+                BookId = _bookWithProperProps.Id,
+                CreatedDate = DateTime.Today,
+                ReceivedDate = DateTime.Now.AddDays(1),
+                LentDate = DateTime.Today,
+                DueDate = DateTime.Today.AddDays(5)
+            }
+        };
+
+        _loanRepository.Setup(x => x.GetAllByBookId(_bookWithProperProps.Id))
+            .ReturnsAsync(new List<Core.Entities.Loan> { _properLoan });
+
+        _bookRepository.Setup(x => x.GetByIdAsync(_bookWithProperProps.Id)).ReturnsAsync(_bookWithProperProps);
+
+        var ex = Assert.ThrowsAsync<Exception>(() => _bookService.Delete(_bookWithProperProps.Id));
+        Assert.That(ex.Message, Is.EqualTo("Books with active loans can't be deleted."));
     }
 
     #endregion

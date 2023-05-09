@@ -1,5 +1,5 @@
-using LibraryManagement.Core.Helpers;
 using LibraryManagement.Core.Helpers.BookHelpers;
+using LibraryManagement.Core.Helpers.LoanHelpers;
 using LibraryManagement.Core.Interfaces.Repositories;
 using LibraryManagement.Core.Interfaces.Services;
 
@@ -9,11 +9,14 @@ public class BookService : IBookService
 {
     private readonly IBookRepository _bookRepository;
     private readonly IBookCategoryService _bookCategoryService;
+    private readonly ILoanService _loanService;
 
-    public BookService(IBookRepository bookRepository, IBookCategoryService bookCategoryService)
+    public BookService(IBookRepository bookRepository, IBookCategoryService bookCategoryService,
+        ILoanService loanService)
     {
         _bookRepository = bookRepository;
         _bookCategoryService = bookCategoryService;
+        _loanService = loanService;
     }
 
     public async Task<Core.Entities.Book?> GetById(Guid id)
@@ -27,7 +30,7 @@ public class BookService : IBookService
     public async Task Add(Core.Entities.Book book)
     {
         BookServiceHelper.CheckArgsForException(book);
-        
+
         var doesExists = await _bookRepository.GetByName(book.Name) != null;
 
         if (doesExists)
@@ -39,7 +42,7 @@ public class BookService : IBookService
     public async Task Update(Core.Entities.Book book)
     {
         BookServiceHelper.CheckArgsForException(book);
-        
+
         var doesExists = await _bookRepository.GetByName(book.Name) != null;
 
         if (!doesExists)
@@ -57,6 +60,12 @@ public class BookService : IBookService
 
         if (!doesExists)
             throw new ArgumentException("Book does not exists. Please check the entity.");
+        
+        var loans = await _loanService.GetAllByBookId(id);
+        var doesHaveActiveLoan = loans != null && LoanServiceHelper.CheckListForActiveLoans(loans);
+
+        if (doesHaveActiveLoan)
+            throw new Exception("Books with active loans can't be deleted.");
 
         await _bookRepository.Delete(id);
     }
