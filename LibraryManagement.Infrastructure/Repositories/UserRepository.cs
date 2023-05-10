@@ -28,4 +28,9 @@ public class UserRepository : GenericRepository<User>, IUserRepository
     {
         return await _context.Users.FirstOrDefaultAsync(x => x.Phone == phone);
     }
+
+    public async Task<List<User?>> GetUsersByRoleId(Guid roleId)
+    {
+        return await _context.Users.Where(x => x.UserRoles.Any(y => y.Id == roleId) != null).ToListAsync();
+    }
 }

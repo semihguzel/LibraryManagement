@@ -73,4 +73,12 @@ public class UserService : IUserService
 
         return await _userRepository.GetByPhone(phone);
     }
+
+    public async Task<List<Core.Entities.User?>> GetUsersByRoleId(Guid roleId)
+    {
+        if (roleId == Guid.Empty)
+            throw new ArgumentException("Please enter a valid id.");
+
+        return await _userRepository.GetUsersByRoleId(roleId);
+    }
 }

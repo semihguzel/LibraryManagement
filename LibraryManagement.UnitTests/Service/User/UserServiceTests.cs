@@ -30,7 +30,7 @@ public class UserServiceTests
             Id = Guid.NewGuid(),
             Phone = "123432",
             CreatedDate = DateTime.Now,
-            UserRoles = new List<UserRole> { new() { Name = "User", CreatedDate = DateTime.Now } }
+            UserRoles = new List<UserRole> { new() { Id = Guid.NewGuid(), Name = "User", CreatedDate = DateTime.Now } }
         };
 
         _improperUser = new Core.Entities.User
@@ -164,32 +164,59 @@ public class UserServiceTests
     public void GetByUsername_WithNullOrWhitespaceName_ThrowArgumentExceptionWithMessage()
     {
         var ex = Assert.ThrowsAsync<ArgumentException>(() => _userService.GetByUsername(_improperUser.Username));
-        
+
         Assert.That(ex.Message, Is.EqualTo("Username cannot be empty or null."));
     }
 
     #endregion
-    
+
     #region GetByEmail
 
     [Test]
     public void GetByEmail_WithNullOrWhitespaceName_ThrowArgumentExceptionWithMessage()
     {
         var ex = Assert.ThrowsAsync<ArgumentException>(() => _userService.GetByEmail(_improperUser.Email));
-        
+
         Assert.That(ex.Message, Is.EqualTo("Email cannot be empty or null."));
     }
 
     #endregion
-    
+
     #region GetByPhone
 
     [Test]
     public void GetByPhone_WithNullOrWhitespaceName_ThrowArgumentExceptionWithMessage()
     {
         var ex = Assert.ThrowsAsync<ArgumentException>(() => _userService.GetByPhone(_improperUser.Phone));
-        
+
         Assert.That(ex.Message, Is.EqualTo("Phone cannot be empty or null."));
+    }
+
+    #endregion
+
+    #region GetUsersByRoleId
+    
+    [Test]
+    public void GetUsersByRoleId_WithEmptyGuid_ThrowArgumentExceptionWithMessage()
+    {
+        var role = _properUser.UserRoles.First();
+        role.Id = Guid.Empty;
+
+        var ex = Assert.ThrowsAsync<ArgumentException>(() => _userService.GetUsersByRoleId(role.Id));
+        Assert.That(ex.Message, Is.EqualTo("Please enter a valid id."));
+    }
+
+    [Test]
+    public async Task GetUsersByRoleId_WithProperArgs_ReturnUsers()
+    {
+        var role = _properUser.UserRoles.First();
+        
+        _userRepository.Setup(x => x.GetUsersByRoleId(role.Id))
+            .ReturnsAsync(new List<Core.Entities.User?> { _properUser });
+
+        var list = await _userService.GetUsersByRoleId(role.Id);
+        
+        Assert.That(list.Count, Is.GreaterThan(0));
     }
 
     #endregion
