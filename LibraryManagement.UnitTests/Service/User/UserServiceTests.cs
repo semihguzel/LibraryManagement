@@ -30,7 +30,7 @@ public class UserServiceTests
             Id = Guid.NewGuid(),
             Phone = "123432",
             CreatedDate = DateTime.Now,
-            UserRoles = new List<UserRole> { new() { Id = Guid.NewGuid(), Name = "User", CreatedDate = DateTime.Now } }
+            UserRoles = new List<Core.Entities.UserRole> { new() { Id = Guid.NewGuid(), Name = "User", CreatedDate = DateTime.Now } }
         };
 
         _improperUser = new Core.Entities.User
