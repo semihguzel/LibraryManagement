@@ -304,8 +304,11 @@ public class BookServiceTests
     [Test]
     public void GetByName_NullOrWhiteSpaceArg_ThrowArgumentException()
     {
-        Assert.ThrowsAsync<ArgumentException>(() => _bookService.GetByName(_nullString));
-        Assert.ThrowsAsync<ArgumentException>(() => _bookService.GetByName(_whiteSpaceString));
+        var ex1 = Assert.ThrowsAsync<ArgumentException>(() => _bookService.GetByName(_nullString));
+        var ex2 = Assert.ThrowsAsync<ArgumentException>(() => _bookService.GetByName(_whiteSpaceString));
+        
+        Assert.That(ex1.Message, Is.EqualTo("Book name cannot be empty."));
+        Assert.That(ex2.Message, Is.EqualTo("Book name cannot be empty."));
     }
 
     [Test]

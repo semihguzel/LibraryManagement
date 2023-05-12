@@ -73,7 +73,7 @@ public class BookService : IBookService
     public async Task<Core.Entities.Book?> GetByName(string name)
     {
         if (string.IsNullOrWhiteSpace(name))
-            throw new ArgumentException();
+            throw new ArgumentException("Book name cannot be empty.");
 
         return await _bookRepository.GetByName(name);
     }
