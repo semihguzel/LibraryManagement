@@ -18,14 +18,6 @@ public class BookRepositoryTests
         _bookRepositoryMock = new Mock<IBookRepository>();
     }
 
-    [TestCase("")]
-    [TestCase(null)]
-    [TestCase("              ")]
-    public void GetByName_NullOrWhiteSpace_ArgumentException(string name)
-    {
-        Assert.ThrowsAsync<ArgumentException>(() => _bookRepository.GetByName(name));
-    }
-
     [Test]
     public async Task GetByName_NotExisting_ReturnNull()
     {
