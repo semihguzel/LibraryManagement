@@ -91,8 +91,8 @@ public class BookService : IBookService
         return await _bookRepository.GetByCategoryCode(categoryCode);
     }
 
-    public async Task<List<Core.Entities.Book>> GetBooksByCategoryId(Guid categoryId)
+    public async Task<IReadOnlyList<Core.Entities.Book>> GetAllAsync()
     {
-        throw new NotImplementedException();
+        return await _bookRepository.GetAllAsync();
     }
 }

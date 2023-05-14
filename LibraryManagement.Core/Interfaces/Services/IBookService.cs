@@ -10,5 +10,5 @@ public interface IBookService
     Task Delete(Guid id);
     Task<Book?> GetByName(string name);
     Task<List<Book>?> GetBooksByCategoryCode(string categoryCode);
-    Task<List<Book>> GetBooksByCategoryId(Guid categoryId);
+    Task<IReadOnlyList<Book>> GetAllAsync();
 }
