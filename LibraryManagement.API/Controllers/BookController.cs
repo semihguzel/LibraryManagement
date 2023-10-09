@@ -8,10 +8,12 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace LibraryManagement.API.Controllers;
 
+[ApiController]
+[Route("api/[controller]")]
 public class BookController : BaseController
 {
     private readonly IMapper _mapper;
-    private IBookService _bookService;
+    private readonly IBookService _bookService;
 
     public BookController(IMapper mapper, IBookService bookService)
     {
@@ -19,6 +21,13 @@ public class BookController : BaseController
         _bookService = bookService;
     }
 
+    [HttpGet]
+    public async Task<IActionResult> Test()
+    {
+        return Ok("Success");
+    }
+
+    [HttpPost]
     public async Task<IActionResult> AddBooks(BookCreateUpdateDto dto)
     {
         try
