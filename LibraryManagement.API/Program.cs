@@ -17,6 +17,9 @@ builder.Services.AddMapperProfiles();
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerServices();
+
+builder.Services.AddApplicationServices();
 
 builder.Services.AddDbContext<LibraryContext>(o =>
     o.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
